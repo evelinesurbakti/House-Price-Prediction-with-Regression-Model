@@ -1,0 +1,294 @@
+---
+title: "House Price Prediction"
+author: "Eveline Surbakti"
+date: "11/15/2019"
+output: word_document
+---
+```{r, include=FALSE}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(car)
+library(corrplot)
+library(gridExtra)
+library(olsrr)
+
+House = read.csv("House.csv", header = T)
+colnames(House)[1] <- 'Price'
+```
+
+# EDA - 1
+Checking the basic statistics.
+```{r}
+boxplot(House$Price, main="House Price")
+```
+
+```{r}
+hist(House$Price,freq=FALSE)
+```
+
+```{r}
+summary(House$Price)
+```
+
+```{r}
+qqnorm(House$Price)
+```
+
+```{r}
+shapiro.test(House$Price)
+#And the p-value is greater than alpha, means the data is normally distributed.
+
+```
+
+# EDA - 2
+Check the relationship of variables with the price. 
+```{r}
+House$Bath<-as.factor(House$Bath)
+House$Bed<-as.factor(House$Bed)
+House$Garage<-as.factor(House$Garage)
+House$School<-as.factor(House$School)
+summary(House)
+```
+
+```{r}
+boxplot(Price ~ Bed, data=House, main="Relation between Price and Number of Bedrooms")
+```
+
+```{r}
+boxplot(Price ~ Bath, data=House, main= "Relationship between Price and Number of Bathrooms")
+```
+
+```{r}
+boxplot(Price ~ Garage, data=House, main="Relationship between Price and the Garage")
+```
+
+```{r}
+boxplot(Price ~ School, data=House, main="Relationship between Price and the School Location")
+```
+
+# EDA - 3
+Checking for correlations.
+```{r}
+cor(House[,c('Price','Size','Lot','Year')])
+```
+
+```{r}
+par(mfrow=c(1,1))
+pairs(House[,c(1,2,3,6)])
+```
+
+```{r fig.height = 20, fig.width = 12, fig.align = "center"}
+g1 = ggplot(House, aes(x=Size, y=Price)) + geom_point() +
+geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+g2 = ggplot(House, aes(x=Lot, y=Price)) + geom_point() +
+geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+g3 = ggplot(House, aes(x=Year, y=Price)) + geom_point() +
+geom_smooth(method=lm, se=FALSE, fullrange=TRUE)
+
+grid.arrange(g1+ggtitle("Size"), g2+ggtitle("Lot"), g3+ggtitle("Year"), nrow = 2)
+```
+
+# Regression Model for House Price Prediction
+```{r}
+par(mfrow=c(1, 1))
+
+#Regression Model 
+modelprice <- lm(Price ~ ., data=House)
+summary(modelprice)
+
+residualPlot(modelprice, main="Residuals")
+```
+
+```{r}
+plot(modelprice)
+```
+
+# ANOVA
+Compute the type 1 anova table. Interpret the output.
+```{r}
+anova(modelprice)
+```
+
+```{r}
+reducedmodel1 <- lm(Price ~ Size+Lot+Bath+Bed+Garage+School, data=House)
+```
+
+H0 is beta5 = 0
+Fail to reject since the p-value is greater than 5%
+```{r}
+anova(modelprice,reducedmodel1)
+```
+
+# Diagnostics 
+__Step 1__
+
+Check the linearity assumption by interpreting the added variable plots and component-plus-residual plots. 
+
+```{r}
+avPlots(reducedmodel1)
+```
+
+```{r}
+avPlots(reducedmodel1) 
+```
+
+
+```{r}
+crPlots(reducedmodel1) 
+```
+
+__Step 2__
+Check the random/i.i.d. sample assumption by carefully reading the data
+description and computing the Durbin Watson test
+
+```{r}
+dwt(reducedmodel1)
+```
+The Durbin Watson test statistic is 1.511 and the p-value is 0.01 so
+the hypothesis of no autocorrelation is rejected and the observations
+cannot be classed as independent.
+
+__Step 3__
+Check the collinearity assumption by interpreting the correlation and variance inflation factors. 
+
+```{r}
+M <- cor(House[,c('Price','Size','Lot','Year')]);
+corrplot.mixed(M)
+```
+
+```{r}
+cor(House[,c('Price','Size','Lot','Year')])
+```
+The correlation between size and lot is mild at 0.30 Indicating that it is unlikely we would have a multicollinearity problem with a regression including these predictor variables.
+
+```{r}
+vif(reducedmodel1)
+```
+A VIF of 1 means:
+1 = not correlated.
+Between 1 and 5 = moderately correlated.
+Greater than 5 = highly correlated.
+
+__Step 4__
+Check the zero conditional mean and homoscedasticity assumption by
+interpreting the studentized residuals vrs fitted values plots and the studentized residuals vrs predictor variable plots. 
+
+```{r}
+plot(fitted(reducedmodel1),rstudent(reducedmodel1),abline(h=0))
+```
+
+```{r}
+par(mfrow=c(1,1)) 
+plot(House$Size,rstudent(reducedmodel1),abline(h=0))
+```
+
+
+
+```{r}
+plot(House$Lot,rstudent(reducedmodel1),abline(h=0))
+```
+
+
+```{r}
+plot(House$Year,rstudent(reducedmodel1),abline(h=0))
+```
+
+__Step 5__
+Check the Normality assumption by interpreting the histogram and 
+```{r}
+hist(rstudent(reducedmodel1))
+```
+
+```{r}
+qqnorm(rstudent(reducedmodel1))
+```````
+
+Quantile-quantile plot of the studentized residuals looks good.
+
+```{r}
+hv <- as.data.frame(hatvalues(reducedmodel1))
+mn <- mean(hatvalues(reducedmodel1))
+hv$warn <- ifelse(hv[, 'hatvalues(reducedmodel1)']>2*3, 'x3',
+   ifelse(hv[, 'hatvalues(reducedmodel1)']>2*3, 'x3', '-' ))
+hv
+```
+# Leverage, Influence and Outliers
+```{r}
+leveragePlots(reducedmodel1)
+
+```
+
+
+```{r}
+plot(reducedmodel1)
+```
+
+```{r}
+cooktest = cooks.distance(reducedmodel1)
+plot(cooktest,ylab="Cooks distances", main="Cook Distance of Reducedmodel1")
+```
+
+
+Use the influence plot to see if there is any influence points.
+```{r}
+influencePlot(reducedmodel1,main="Influence Plot",sub="Circle size is proportial to Cook's Distance" )
+```
+How to correct the outliers? 
+
+1. Drop the outlier records.
+
+2. Cap the outliers data.
+
+3. Assign a new value.
+
+4. Try a transformation.
+
+
+```{r}
+outlierTest(reducedmodel1)
+```
+
+```{r}
+ols_plot_resid_lev(reducedmodel1)
+```
+Checking the points
+```{r}
+House[74,]
+```
+
+```{r}
+House[2,]
+```
+
+
+```{r}
+House[25,]
+```
+
+
+```{r}
+House[30,]
+```
+
+# Expected Value, Confidence Interval and Prediction Interval
+
+This model providing a good estimate of the house prices.
+
+```{r}
+order <- order(fitted(reducedmodel1))
+Fitted_Value<- fitted(reducedmodel1)[order]
+Observed_House_Price<-House$Price[order]
+
+PI <- predict(lm(Observed_House_Price ~ Fitted_Value), interval = "prediction", level = 0.95)
+
+CI <- predict(lm(Observed_House_Price ~ Fitted_Value), interval = "confidence", level = 0.95)
+
+ggplot(House,aes(Fitted_Value,Observed_House_Price))+
+  geom_point() + geom_smooth(method=lm) +
+  geom_line(aes(y = PI[,2] ), color = "blue", linetype = 1)+
+  geom_line(aes(y = PI[,3]), color = "blue", linetype = 1)+
+  geom_line(aes(y = CI[,2] ), color = "red", linetype = 1)+
+  geom_line(aes(y = CI[,3]), color = "red", linetype = 1)
+```
+
