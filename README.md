@@ -16,8 +16,10 @@ We will model single-family home sale price using these predictor variables:
 
 ## Data Set
 Dataset included (House.csv)
+
 The data contains information on the sale of 76 single-family homes in Dublin during 2005.
 
 ## Document format
 This project is written in Rstudio, and knitted to .docx. 
+
 We are using R version 4.0.2 and ggplot version 3.3.2
