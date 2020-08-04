@@ -1,7 +1,7 @@
 # House Price Prediction with Regression Model
 
 ## Why
-We will model single-family home sale price using these predictor variables:
+We want to model single-family home sale price using these predictor variables:
 - __Size__ floor size (thousands of square feet)
 - __Lot__ lot size category (from 1 to 11 explained below)
 - __Bath__ number of bathrooms (with half-bathrooms counting as 0.1 explained further in the report)
