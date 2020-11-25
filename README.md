@@ -14,7 +14,7 @@ The data **House.csv** contains information on the sale of 76 single-family home
 - __St.Mary's__ indicator for St.Mary's College (reference: St.Mary's College)
 - __St Louis__ indicator for St Louis High School (reference: St Louis High School)
 
-It seems reasonable to expect that homes built on properties with a large amount of land area command higher sale prices than homes with less land, all else being equal. However, an increase in land area of (say) 2000 square feet from 4000 to 6000 should probably make a larger dierence (to sale price) than going from 24,000 to 26,000. Thus, realtors have constructed lot size \categories," which in their experience correspond to approximately equal-sized increases in sale price.
+It seems reasonable to expect that homes built on properties with a large amount of land area command higher sale prices than homes with less land, all else being equal. However, an increase in land area of (say) 2000 square feet from 4000 to 6000 should probably make a larger difference (to sale price) than going from 24,000 to 26,000. Thus, realtors have constructed lot size \categories," which in their experience correspond to approximately equal-sized increases in sale price.
 
 
 | Lot Size      | Category        | 
